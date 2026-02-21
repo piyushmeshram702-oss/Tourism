@@ -260,42 +260,14 @@ st.markdown('''
 </div>
 '''.format(datetime.now().strftime("%B %d, %Y at %I:%M %p")), unsafe_allow_html=True)
 
-# Enhanced sidebar with creative card-based navigation
+# Enhanced sidebar with creative styling
 st.sidebar.markdown("""
-<style>
-    /* Creative navigation cards */
-    .nav-card {
-        background: rgba(255,255,255,0.9);
-        padding: 1.2rem;
-        border-radius: 12px;
-        margin: 0.5rem 0;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border: 2px solid transparent;
-        display: flex;
-        align-items: center;
-    }
-    
-    .nav-card:hover {
-        background: rgba(255,255,255,1);
-        border-color: #3498db;
-        transform: translateX(8px);
-        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
-    }
-    
-    .nav-icon {
-        font-size: 1.4rem;
-        margin-right: 12px;
-        width: 30px;
-        text-align: center;
-    }
-</style>
 <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 15px; margin-bottom: 1rem;">
     <h2 style="color: white; text-align: center; margin-bottom: 1rem;">🧭 Navigation</h2>
 </div>
 """, unsafe_allow_html=True)
 
-# Enhanced navigation with creative card design
+# Enhanced navigation with creative styling
 navigation_options = {
     "📊 Overview": "Overview",
     "📈 Data Insights": "Data Insights", 
@@ -304,21 +276,18 @@ navigation_options = {
     "ℹ️ About": "About"
 }
 
-# Display creative navigation cards
+# Display creative navigation with enhanced styling
 st.sidebar.markdown("### Choose a section:")
 
-for nav_key, nav_value in navigation_options.items():
-    icon, label = nav_key.split(" ", 1)
-    if st.sidebar.button(f'''
-    <div class="nav-card">
-        <span class="nav-icon">{icon}</span>
-        <span>{label}</span>
-    </div>
-    ''', key=f"nav_{nav_value}", use_container_width=True):
-        st.session_state.selected_page = nav_value
+# Create radio buttons with custom styling
+selected_nav = st.sidebar.radio(
+    "",
+    list(navigation_options.keys()),
+    index=0,
+    key="navigation_radio"
+)
 
-# Get selected page (default to Overview)
-page = st.session_state.get("selected_page", "Overview")
+page = navigation_options[selected_nav]
 
 if page == "Overview":
     st.markdown("""
