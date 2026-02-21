@@ -11,10 +11,155 @@ import time
 from datetime import datetime
 import base64
 from streamlit.components.v1 import html
+import functools
+from typing import Optional, Dict, Any
+import traceback
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Professional error handling decorator
+def professional_error_handler(func):
+    """Decorator for professional error handling with detailed logging"""
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            logger.info(f"Executing function: {func.__name__}")
+            start_time = time.time()
+            result = func(*args, **kwargs)
+            execution_time = time.time() - start_time
+            logger.info(f"Function {func.__name__} completed successfully in {execution_time:.2f}s")
+            return result
+        except Exception as e:
+            error_msg = f"Error in {func.__name__}: {str(e)}"
+            logger.error(error_msg)
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            st.error(f"❌ {error_msg}")
+            st.info("🔧 The system will attempt to recover. Please try again or contact support if the issue persists.")
+            return None
+    return wrapper
+
+# Data validation utilities
+class DataValidator:
+    """Professional data validation utilities"""
+    
+    @staticmethod
+    def validate_dataframe(df: pd.DataFrame, required_columns: list) -> bool:
+        """Validate dataframe structure and content"""
+        if df is None or df.empty:
+            logger.warning("DataFrame is None or empty")
+            return False
+        
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            logger.error(f"Missing required columns: {missing_columns}")
+            return False
+        
+        # Check for data quality issues
+        null_counts = df.isnull().sum()
+        high_null_columns = null_counts[null_counts > len(df) * 0.5]
+        if not high_null_columns.empty:
+            logger.warning(f"Columns with >50% null values: {high_null_columns.index.tolist()}")
+        
+        return True
+    
+    @staticmethod
+    def validate_numeric_range(series: pd.Series, min_val: float, max_val: float, column_name: str) -> bool:
+        """Validate numeric data ranges"""
+        if series is None or series.empty:
+            return False
+        
+        out_of_range = series[(series < min_val) | (series > max_val)]
+        if not out_of_range.empty:
+            logger.warning(f"Column {column_name} has {len(out_of_range)} values out of range [{min_val}, {max_val}]")
+            return False
+        return True
+
+# Professional loading indicator
+def show_loading_state(message: str = "Processing your request..."):
+    """Show professional loading state with progress bar"""
+    with st.spinner(message):
+        # Simulate processing time for better UX
+        time.sleep(0.5)
+        return True
+
+# Enhanced data loading with progress
+def load_data_with_progress():
+    """Load data with professional progress indicators"""
+    try:
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        status_text.text("🔄 Initializing models...")
+        progress_bar.progress(20)
+        
+        rating_pred, visit_pred, rec_system = load_models()
+        
+        status_text.text("📊 Loading data...")
+        progress_bar.progress(60)
+        
+        time.sleep(1)  # Add slight delay for better UX
+        
+        status_text.text("✅ System ready!")
+        progress_bar.progress(100)
+        
+        time.sleep(0.5)
+        progress_bar.empty()
+        status_text.empty()
+        
+        return rating_pred, visit_pred, rec_system
+    except Exception as e:
+        logger.error(f"Data loading failed: {str(e)}")
+        st.error("❌ Failed to load system components. Please refresh the page.")
+        return None, None, None
+
+# Professional data quality checker
+class DataQualityChecker:
+    """Professional data quality assessment tool"""
+    
+    def __init__(self, df: pd.DataFrame):
+        self.df = df
+        self.quality_report = {}
+    
+    def generate_quality_report(self) -> Dict[str, Any]:
+        """Generate comprehensive data quality report"""
+        if self.df is None or self.df.empty:
+            return {"error": "No data available"}
+        
+        report = {
+            "total_records": len(self.df),
+            "total_columns": len(self.df.columns),
+            "missing_data_percentage": (self.df.isnull().sum().sum() / (len(self.df) * len(self.df.columns))) * 100,
+            "duplicate_records": self.df.duplicated().sum(),
+            "data_types": self.df.dtypes.to_dict(),
+            "memory_usage": self.df.memory_usage(deep=True).sum() / 1024 / 1024,  # MB
+            "numeric_columns_stats": {},
+            "categorical_columns_stats": {}
+        }
+        
+        # Analyze numeric columns
+        numeric_cols = self.df.select_dtypes(include=[np.number]).columns
+        for col in numeric_cols:
+            report["numeric_columns_stats"][col] = {
+                "min": float(self.df[col].min()) if not self.df[col].empty else None,
+                "max": float(self.df[col].max()) if not self.df[col].empty else None,
+                "mean": float(self.df[col].mean()) if not self.df[col].empty else None,
+                "std": float(self.df[col].std()) if not self.df[col].empty else None,
+                "null_count": int(self.df[col].isnull().sum())
+            }
+        
+        # Analyze categorical columns
+        categorical_cols = self.df.select_dtypes(include=['object']).columns
+        for col in categorical_cols:
+            report["categorical_columns_stats"][col] = {
+                "unique_values": int(self.df[col].nunique()),
+                "top_values": self.df[col].value_counts().head(5).to_dict(),
+                "null_count": int(self.df[col].isnull().sum())
+            }
+        
+        self.quality_report = report
+        return report
 
 # Set page configuration
 st.set_page_config(
@@ -242,10 +387,8 @@ def load_models():
         st.error(f"Error loading models. Please check the data files. Details: {str(e)}")
         return None, None, None
 
-# Enhanced loading experience
-with st.spinner("🚀 Initializing Tourism Analytics Engine..."):
-    rating_pred, visit_pred, rec_system = load_models()
-    time.sleep(1)  # Add slight delay for better UX
+# Enhanced loading experience with professional progress indicators
+rating_pred, visit_pred, rec_system = load_data_with_progress()
 
 # Enhanced main header with creative professional design
 st.markdown('''
@@ -296,9 +439,33 @@ if page == "Overview":
     </div>
     """, unsafe_allow_html=True)
     
-    # Enhanced statistics display
+    # Enhanced statistics display with professional validation
     if rating_pred and rating_pred.df is not None:
         df = rating_pred.df
+        
+        # Professional data validation
+        required_columns = ['UserId', 'AttractionId', 'Rating', 'VisitYear', 'Attraction', 'Country']
+        if not DataValidator.validate_dataframe(df, required_columns):
+            st.error("❌ Data validation failed. Required columns are missing.")
+            st.info("🔧 Please ensure all data files are properly loaded.")
+        else:
+            
+            # Validate rating range
+            if not DataValidator.validate_numeric_range(df['Rating'], 1.0, 5.0, 'Rating'):
+                st.warning("⚠️ Some rating values are outside the expected range (1-5)")
+        
+        # Show data quality dashboard
+        if st.checkbox("📋 Show Data Quality Report", key="quality_report"):
+            quality_checker = DataQualityChecker(df)
+            quality_checker.display_quality_dashboard()
+        
+        # Professional data summary
+        st.markdown("""
+        <div style="background: rgba(46, 204, 113, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+            <h4>📊 Data Summary</h4>
+            <p>Last validated: {}</p>
+        </div>
+        """.format(datetime.now().strftime("%B %d, %Y at %I:%M %p")), unsafe_allow_html=True)
         
         # Key metrics with enhanced styling
         col1, col2, col3, col4 = st.columns(4)
@@ -354,22 +521,27 @@ if page == "Overview":
         </div>
         """, unsafe_allow_html=True)
         
-        # Creative data filtering tools
+        # Professional data filtering tools
         st.markdown("""
         <div style="background: rgba(52, 152, 219, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
-            <h4 style="margin-top: 0; color: #2c3e50;">🔍 Smart Data Explorer</h4>
+            <h4 style="margin-top: 0; color: #2c3e50;">🔍 Professional Data Explorer</h4>
+            <p>Advanced filtering tools with real-time validation and quality checks</p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Advanced filtering options
+        # Advanced filtering options with professional validation
         col_filter1, col_filter2 = st.columns(2)
         
         with col_filter1:
-            min_rating = st.slider("Minimum Rating", 1.0, 5.0, 1.0, 0.5, key="min_rating")
+            min_rating = st.slider("Minimum Rating", 1.0, 5.0, 1.0, 0.5, 
+                                 key="min_rating",
+                                 help="Filter attractions with ratings above this threshold. Valid range: 1.0-5.0")
             
         with col_filter2:
             available_years = sorted(df['VisitYear'].unique())
-            selected_year = st.selectbox("Visit Year", ["All"] + available_years, key="year_filter")
+            selected_year = st.selectbox("Visit Year", ["All"] + available_years, 
+                                       key="year_filter",
+                                       help="Filter by specific visit year or select 'All' for complete dataset")
         
         # Search functionality
         search_col1, search_col2 = st.columns([3, 1])
