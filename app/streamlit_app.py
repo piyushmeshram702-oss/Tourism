@@ -450,27 +450,29 @@ if page == "Overview":
         actual_columns = list(df.columns)
         required_columns = ['UserId', 'AttractionId', 'Rating', 'VisitYear', 'Attraction']
         
-        # Find the best location column
-        country_columns = [col for col in actual_columns if 'Country' in col]
-        if country_columns:
-            location_column = country_columns[0]  # Use first available country column
-            required_columns.append(location_column)
-            st.info(f"Using location column: {location_column}")
+        # Find the best location column - use UserCountry as it's the most relevant
+        if 'UserCountry' in actual_columns:
+            required_columns.append('UserCountry')
+            location_column = 'UserCountry'
+            st.info(f"📍 Using UserCountry column for location data")
+        elif 'AttractionCountryId' in actual_columns:
+            required_columns.append('AttractionCountryId')
+            location_column = 'AttractionCountryId'
+            st.info(f"📍 Using AttractionCountryId column for location data")
+        elif 'CountryId' in actual_columns:
+            required_columns.append('CountryId')
+            location_column = 'CountryId'
+            st.info(f"📍 Using CountryId column for location data")
         else:
-            # If no country column, check for alternatives
-            if 'UserCountry' in actual_columns:
-                required_columns.append('UserCountry')
-                location_column = 'UserCountry'
-                st.info(f"Using location column: {location_column}")
+            # Check for any country-related column as fallback
+            country_columns = [col for col in actual_columns if 'country' in col.lower() or 'Country' in col]
+            if country_columns:
+                required_columns.append(country_columns[0])
+                location_column = country_columns[0]
+                st.info(f"📍 Using {location_column} column for location data")
             else:
-                # As last resort, use CityName
-                if 'AttractionCityName' in actual_columns:
-                    required_columns.append('AttractionCityName')
-                    location_column = 'AttractionCityName'
-                    st.info(f"Using location column: {location_column}")
-                else:
-                    st.warning("⚠️ No suitable location column found, using basic validation")
-                    location_column = None
+                st.warning("⚠️ No suitable location column found, using basic validation")
+                location_column = None
         if not DataValidator.validate_dataframe(df, required_columns):
             st.error("❌ Data validation failed. Required columns are missing.")
             missing_cols = [col for col in required_columns if col not in df.columns]
