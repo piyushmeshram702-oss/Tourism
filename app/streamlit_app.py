@@ -424,53 +424,20 @@ if page == "Overview":
             st.error(f"❌ Error applying filters: {str(e)}")
             # Show full dataset when filtering fails
             st.dataframe(df.head(10), use_container_width=True)
-                    
-                    if len(filtered_df) > 0:
-                        st.success(f"✅ Found {len(filtered_df)} results for '{search_term}'")
-                        st.dataframe(filtered_df.head(15), use_container_width=True, height=500)
-                        
-                        # Show additional search info
-                        st.markdown(f"""
-                        <div style="background: rgba(79, 205, 196, 0.1); padding: 1rem; border-radius: 10px; margin-top: 1rem;">
-                            <h4>📊 Search Results Summary</h4>
-                            <p><strong>Total matches:</strong> {len(filtered_df):,}</p>
-                            <p><strong>Unique attractions found:</strong> {filtered_df['Attraction'].nunique()}</p>
-                            <p><strong>Average rating:</strong> {filtered_df['Rating'].mean():.2f}</p>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    else:
-                        st.info(f"🔍 No results found for '{search_term}'. Try different keywords.")
-                        
-                        # Show suggestions
-                        st.markdown("💡 **Try these search terms:**")
-                        sample_attractions = df['Attraction'].sample(min(5, len(df))).tolist()
-                        for attraction in sample_attractions:
-                            st.markdown(f"- {attraction}")
-                            
-            except Exception as e:
-                st.error(f"❌ Search error: {str(e)}")
-                st.info("Please try a different search term or check the data loading.")
-        else:
-            # Show full dataset when no search
-            st.dataframe(df.head(10), use_container_width=True)
-            st.caption("Showing first 10 records. Use search above to filter results.")
-            
-            # Show dataset info
-            st.markdown(f"""
-            <div style="background: rgba(102, 126, 234, 0.1); padding: 1rem; border-radius: 10px; margin-top: 1rem;">
-                <h4>📊 Dataset Overview</h4>
-                <p><strong>Total records:</strong> {len(df):,}</p>
-                <p><strong>Unique attractions:</strong> {df['Attraction'].nunique()}</p>
-                <p><strong>Unique users:</strong> {df['UserId'].nunique():,}</p>
-                <p><strong>Date range:</strong> {df['VisitYear'].min()}-{df['VisitYear'].max()}</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
+    
     else:
-        st.markdown("""
-        <div style="background: #ff6b6b; color: white; padding: 2rem; border-radius: 15px; text-align: center;">
-            <h3>⚠️ Data Loading Error</h3>
-            <p>Please ensure data files are in the correct location.</p>
+        # Show full dataset when no search
+        st.dataframe(df.head(10), use_container_width=True)
+        st.caption("Showing first 10 records. Use search above to filter results.")
+        
+        # Show dataset info
+        st.markdown(f"""
+        <div style="background: rgba(102, 126, 234, 0.1); padding: 1rem; border-radius: 10px; margin-top: 1rem;">
+            <h4>📊 Dataset Overview</h4>
+            <p><strong>Total records:</strong> {len(df):,}</p>
+            <p><strong>Unique attractions:</strong> {df['Attraction'].nunique()}</p>
+            <p><strong>Unique users:</strong> {df['UserId'].nunique():,}</p>
+            <p><strong>Date range:</strong> {df['VisitYear'].min()}-{df['VisitYear'].max()}</p>
         </div>
         """, unsafe_allow_html=True)
 
