@@ -443,11 +443,45 @@ if page == "Overview":
     if rating_pred and rating_pred.df is not None:
         df = rating_pred.df
         
+        # Professional data validation with flexible column detection
+        
         # Professional data validation
-        required_columns = ['UserId', 'AttractionId', 'Rating', 'VisitYear', 'Attraction', 'Country']
+        # Use more flexible column names based on what's available
+        actual_columns = list(df.columns)
+        required_columns = ['UserId', 'AttractionId', 'Rating', 'VisitYear', 'Attraction']
+        
+        # Find the best location column
+        country_columns = [col for col in actual_columns if 'Country' in col]
+        if country_columns:
+            location_column = country_columns[0]  # Use first available country column
+            required_columns.append(location_column)
+            st.info(f"Using location column: {location_column}")
+        else:
+            # If no country column, check for alternatives
+            if 'UserCountry' in actual_columns:
+                required_columns.append('UserCountry')
+                location_column = 'UserCountry'
+                st.info(f"Using location column: {location_column}")
+            else:
+                # As last resort, use CityName
+                if 'AttractionCityName' in actual_columns:
+                    required_columns.append('AttractionCityName')
+                    location_column = 'AttractionCityName'
+                    st.info(f"Using location column: {location_column}")
+                else:
+                    st.warning("⚠️ No suitable location column found, using basic validation")
+                    location_column = None
         if not DataValidator.validate_dataframe(df, required_columns):
             st.error("❌ Data validation failed. Required columns are missing.")
+            missing_cols = [col for col in required_columns if col not in df.columns]
+            st.error(f"❌ Missing columns: {missing_cols}")
             st.info("🔧 Please ensure all data files are properly loaded.")
+            
+            # Show some data info for troubleshooting
+            st.write("Sample data:")
+            st.write(df.head())
+            st.write(f"Data shape: {df.shape}")
+            
         else:
             
             # Validate rating range
