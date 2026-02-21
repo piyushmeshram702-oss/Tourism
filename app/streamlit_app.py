@@ -11,7 +11,6 @@ import time
 from datetime import datetime
 import base64
 from streamlit.components.v1 import html
-from annotated_text import annotated_text, annotation
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
