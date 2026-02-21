@@ -354,21 +354,76 @@ if page == "Overview":
         </div>
         """, unsafe_allow_html=True)
         
-        # Interactive data display with enhanced search
-        search_term = st.text_input("🔍 Search attractions:", "", key="attraction_search")
+        # Creative data filtering tools
+        st.markdown("""
+        <div style="background: rgba(52, 152, 219, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+            <h4 style="margin-top: 0; color: #2c3e50;">🔍 Smart Data Explorer</h4>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Add search button for better UX
-        search_button = st.button("🔍 Search", key="search_btn")
+        # Advanced filtering options
+        col_filter1, col_filter2 = st.columns(2)
         
-        # Show search results or full data
-        if (search_term and search_button) or search_term:  # Execute search when term exists and button clicked, or when term exists
-            try:
-                # Validate data availability
-                if df is None or df.empty:
-                    st.warning("⚠️ No data available for search")
-                else:
-                    # Perform search with error handling
-                    filtered_df = df[df['Attraction'].str.contains(search_term, case=False, na=False)]
+        with col_filter1:
+            min_rating = st.slider("Minimum Rating", 1.0, 5.0, 1.0, 0.5, key="min_rating")
+            
+        with col_filter2:
+            available_years = sorted(df['VisitYear'].unique())
+            selected_year = st.selectbox("Visit Year", ["All"] + available_years, key="year_filter")
+        
+        # Search functionality
+        search_col1, search_col2 = st.columns([3, 1])
+        with search_col1:
+            search_term = st.text_input("🔍 Search attractions:", "", key="attraction_search")
+        with search_col2:
+            search_button = st.button("🔍 Search", key="search_btn", use_container_width=True)
+        
+        # Apply smart filtering
+        try:
+            # Start with full dataset
+            filtered_df = df.copy()
+            
+            # Apply rating filter
+            filtered_df = filtered_df[filtered_df['Rating'] >= min_rating]
+            
+            # Apply year filter
+            if selected_year != "All":
+                filtered_df = filtered_df[filtered_df['VisitYear'] == int(selected_year)]
+            
+            # Apply search term if provided
+            if (search_term and search_button) or search_term:
+                filtered_df = filtered_df[filtered_df['Attraction'].str.contains(search_term, case=False, na=False)]
+            
+            # Show results
+            if not filtered_df.empty:
+                st.success(f"✅ Found {len(filtered_df)} matching records")
+                
+                # Show filtering summary
+                st.markdown(f"""
+                <div style="background: rgba(46, 204, 113, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <h4>📊 Filtering Results</h4>
+                    <p><strong>Applied filters:</strong> Rating ≥ {min_rating}, Year: {selected_year}</p>
+                    <p><strong>Records found:</strong> {len(filtered_df):,} out of {len(df):,} total records</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Display filtered data
+                st.dataframe(filtered_df.head(15), use_container_width=True, height=500)
+                
+                # Show additional insights
+                col_insight1, col_insight2 = st.columns(2)
+                with col_insight1:
+                    st.metric("Unique Attractions", filtered_df['Attraction'].nunique())
+                with col_insight2:
+                    st.metric("Average Rating", f"{filtered_df['Rating'].mean():.2f}")
+            
+            else:
+                st.info("🔍 No records match your filtering criteria. Try adjusting the filters.")
+                
+        except Exception as e:
+            st.error(f"❌ Error applying filters: {str(e)}")
+            # Show full dataset when filtering fails
+            st.dataframe(df.head(10), use_container_width=True)
                     
                     if len(filtered_df) > 0:
                         st.success(f"✅ Found {len(filtered_df)} results for '{search_term}'")
