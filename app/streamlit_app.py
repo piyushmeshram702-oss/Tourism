@@ -24,39 +24,108 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Enhanced UI styling
+# Enhanced UI styling with creative professional design
 st.markdown("""
 <style>
-    /* Main background gradient */
+    /* Main background with subtle texture */
     .stApp {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
         min-height: 100vh;
+        background-image: radial-gradient(circle at 10% 20%, rgba(255,255,255,0.05) 0%, transparent 20%),
+                          radial-gradient(circle at 90% 80%, rgba(255,255,255,0.05) 0%, transparent 20%);
     }
     
-    /* Header styling with animation */
+    /* Creative header with geometric patterns */
     .main-header {
-        background: linear-gradient(90deg, #4b6cb7 0%, #182848 100%);
-        padding: 2rem;
-        border-radius: 15px;
+        background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+        padding: 2.5rem;
+        border-radius: 20px;
         margin-bottom: 2rem;
         text-align: center;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.1);
     }
     
-    /* Metric cards styling */
+    .main-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3498db, #2ecc71, #e74c3c, #f39c12);
+    }
+    
+    /* Creative typography */
+    .creative-title {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-weight: 700;
+        background: linear-gradient(90deg, #ecf0f1, #bdc3c7, #ecf0f1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: 1px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    /* Innovative metric cards with creative design */
     .metric-card {
         background: rgba(255, 255, 255, 0.95);
-        padding: 1.5rem;
-        border-radius: 15px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        padding: 1.8rem;
+        border-radius: 16px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         margin: 1rem 0;
-        border: 1px solid rgba(255,255,255,0.2);
+        border: 1px solid rgba(0,0,0,0.05);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, #3498db, #2ecc71);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease;
     }
     
     .metric-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+    
+    .metric-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    /* Creative metric display */
+    .metric-display {
+        text-align: center;
+        padding: 1.5rem;
+    }
+    
+    .metric-number {
+        font-size: 2.2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #3498db, #2ecc71);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0.5rem 0;
+    }
+    
+    .metric-label {
+        font-size: 1rem;
+        color: #7f8c8d;
+        font-weight: 500;
+        letter-spacing: 0.5px;
     }
     
     /* Enhanced buttons */
@@ -178,10 +247,10 @@ with st.spinner("🚀 Initializing Tourism Analytics Engine..."):
     rating_pred, visit_pred, rec_system = load_models()
     time.sleep(1)  # Add slight delay for better UX
 
-# Enhanced main header with animation
+# Enhanced main header with creative professional design
 st.markdown('''
-<div class="main-header pulse">
-    <h1 style="color: white; font-size: 3rem; margin-bottom: 1rem;">🌍 Tourism Experience Analytics</h1>
+<div class="main-header">
+    <h1 class="creative-title" style="font-size: 3rem; margin-bottom: 1rem;">🌍 Tourism Experience Analytics</h1>
     <p style="color: rgba(255,255,255,0.9); font-size: 1.2rem; max-width: 800px; margin: 0 auto;">
         Advanced AI-powered insights for tourism data with predictive analytics and personalized recommendations
     </p>
@@ -191,14 +260,42 @@ st.markdown('''
 </div>
 '''.format(datetime.now().strftime("%B %d, %Y at %I:%M %p")), unsafe_allow_html=True)
 
-# Enhanced sidebar with custom styling
+# Enhanced sidebar with creative card-based navigation
 st.sidebar.markdown("""
+<style>
+    /* Creative navigation cards */
+    .nav-card {
+        background: rgba(255,255,255,0.9);
+        padding: 1.2rem;
+        border-radius: 12px;
+        margin: 0.5rem 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        display: flex;
+        align-items: center;
+    }
+    
+    .nav-card:hover {
+        background: rgba(255,255,255,1);
+        border-color: #3498db;
+        transform: translateX(8px);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+    }
+    
+    .nav-icon {
+        font-size: 1.4rem;
+        margin-right: 12px;
+        width: 30px;
+        text-align: center;
+    }
+</style>
 <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 15px; margin-bottom: 1rem;">
     <h2 style="color: white; text-align: center; margin-bottom: 1rem;">🧭 Navigation</h2>
 </div>
 """, unsafe_allow_html=True)
 
-# Enhanced navigation with icons
+# Enhanced navigation with creative card design
 navigation_options = {
     "📊 Overview": "Overview",
     "📈 Data Insights": "Data Insights", 
@@ -207,13 +304,21 @@ navigation_options = {
     "ℹ️ About": "About"
 }
 
-selected_nav = st.sidebar.radio(
-    "Choose a section:",
-    list(navigation_options.keys()),
-    index=0
-)
+# Display creative navigation cards
+st.sidebar.markdown("### Choose a section:")
 
-page = navigation_options[selected_nav]
+for nav_key, nav_value in navigation_options.items():
+    icon, label = nav_key.split(" ", 1)
+    if st.sidebar.button(f'''
+    <div class="nav-card">
+        <span class="nav-icon">{icon}</span>
+        <span>{label}</span>
+    </div>
+    ''', key=f"nav_{nav_value}", use_container_width=True):
+        st.session_state.selected_page = nav_value
+
+# Get selected page (default to Overview)
+page = st.session_state.get("selected_page", "Overview")
 
 if page == "Overview":
     st.markdown("""
@@ -231,37 +336,45 @@ if page == "Overview":
         
         with col1:
             st.markdown(f"""
-            <div style="background: white; padding: 1.5rem; border-radius: 15px; text-align: center; box-shadow: 0 8px 25px rgba(0,0,0,0.1);">
-                <h3 style="color: #ff6b6b;">📊</h3>
-                <h2 style="margin: 0.5rem 0; color: #2c3e50;">{len(df):,}</h2>
-                <p style="margin: 0; color: #7f8c8d;">Total Transactions</p>
+            <div class="metric-card">
+                <div class="metric-display">
+                    <h3 style="color: #ff6b6b; font-size: 2rem;">📊</h3>
+                    <div class="metric-number">{len(df):,}</div>
+                    <div class="metric-label">Total Transactions</div>
+                </div>
             </div>
             """, unsafe_allow_html=True)
             
         with col2:
             st.markdown(f"""
-            <div style="background: white; padding: 1.5rem; border-radius: 15px; text-align: center; box-shadow: 0 8px 25px rgba(0,0,0,0.1);">
-                <h3 style="color: #4ecdc4;">👥</h3>
-                <h2 style="margin: 0.5rem 0; color: #2c3e50;">{df["UserId"].nunique():,}</h2>
-                <p style="margin: 0; color: #7f8c8d;">Unique Users</p>
+            <div class="metric-card">
+                <div class="metric-display">
+                    <h3 style="color: #4ecdc4; font-size: 2rem;">👥</h3>
+                    <div class="metric-number">{df["UserId"].nunique():,}</div>
+                    <div class="metric-label">Unique Users</div>
+                </div>
             </div>
             """, unsafe_allow_html=True)
             
         with col3:
             st.markdown(f"""
-            <div style="background: white; padding: 1.5rem; border-radius: 15px; text-align: center; box-shadow: 0 8px 25px rgba(0,0,0,0.1);">
-                <h3 style="color: #45b7d1;">📍</h3>
-                <h2 style="margin: 0.5rem 0; color: #2c3e50;">{df["AttractionId"].nunique()}</h2>
-                <p style="margin: 0; color: #7f8c8d;">Attractions</p>
+            <div class="metric-card">
+                <div class="metric-display">
+                    <h3 style="color: #45b7d1; font-size: 2rem;">📍</h3>
+                    <div class="metric-number">{df["AttractionId"].nunique()}</div>
+                    <div class="metric-label">Attractions</div>
+                </div>
             </div>
             """, unsafe_allow_html=True)
             
         with col4:
             st.markdown(f"""
-            <div style="background: white; padding: 1.5rem; border-radius: 15px; text-align: center; box-shadow: 0 8px 25px rgba(0,0,0,0.1);">
-                <h3 style="color: #96ceb4;">⭐</h3>
-                <h2 style="margin: 0.5rem 0; color: #2c3e50;">{df["Rating"].mean():.2f}</h2>
-                <p style="margin: 0; color: #7f8c8d;">Average Rating</p>
+            <div class="metric-card">
+                <div class="metric-display">
+                    <h3 style="color: #96ceb4; font-size: 2rem;">⭐</h3>
+                    <div class="metric-number">{df["Rating"].mean():.2f}</div>
+                    <div class="metric-label">Average Rating</div>
+                </div>
             </div>
             """, unsafe_allow_html=True)
         
