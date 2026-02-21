@@ -160,6 +160,44 @@ class DataQualityChecker:
         
         self.quality_report = report
         return report
+    
+    def display_quality_dashboard(self):
+        """Display professional data quality dashboard"""
+        if not self.quality_report:
+            self.generate_quality_report()
+        
+        st.markdown("""
+        <div style="background: rgba(52, 152, 219, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+            <h4>📋 Data Quality Dashboard</h4>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("📊 Total Records", f"{self.quality_report.get('total_records', 0):,}")
+        with col2:
+            st.metric("📁 Columns", self.quality_report.get('total_columns', 0))
+        with col3:
+            missing_pct = self.quality_report.get('missing_data_percentage', 0)
+            st.metric("⚠️ Missing Data", f"{missing_pct:.1f}%")
+        with col4:
+            st.metric("🔄 Duplicates", self.quality_report.get('duplicate_records', 0))
+        
+        # Detailed quality insights
+        if self.quality_report.get("numeric_columns_stats"):
+            st.subheader("📈 Numeric Data Quality")
+            for col, stats in self.quality_report["numeric_columns_stats"].items():
+                if stats["null_count"] > 0:
+                    st.warning(f"Column '{col}' has {stats['null_count']} null values")
+        
+        if self.quality_report.get("categorical_columns_stats"):
+            st.subheader("📊 Categorical Data Quality")
+            for col, stats in self.quality_report["categorical_columns_stats"].items():
+                if stats["unique_values"] == 1:
+                    st.warning(f"Column '{col}' has only one unique value")
+                elif stats["null_count"] > 0:
+                    st.warning(f"Column '{col}' has {stats['null_count']} null values")
 
 # Set page configuration
 st.set_page_config(
