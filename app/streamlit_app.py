@@ -155,10 +155,10 @@ st.markdown('''
         Advanced AI-powered insights for tourism data with predictive analytics and personalized recommendations
     </p>
     <div style="margin-top: 1rem; font-size: 0.9rem; color: rgba(255,255,255,0.7);">
-        Last updated: {datetime.now().strftime("%B %d, %Y at %I:%M %p")}
+        Last updated: {}
     </div>
 </div>
-'''.format(datetime=datetime.now()), unsafe_allow_html=True)
+'''.format(datetime.now().strftime("%B %d, %Y at %I:%M %p")), unsafe_allow_html=True)
 
 # Enhanced sidebar with custom styling
 st.sidebar.markdown("""
@@ -209,53 +209,310 @@ if page == "Overview":
         st.warning("Data not available. Please ensure data files are in the correct location.")
 
 elif page == "Data Insights":
-    st.header("📈 Data Insights")
+    st.markdown("""
+    <div class="section-header">
+        <h2 style="color: #2c3e50;">📈 Data Insights & Analytics</h2>
+    </div>
+    """, unsafe_allow_html=True)
     
     if rating_pred and rating_pred.df is not None:
         df = rating_pred.df
         
-        # Rating distribution
-        st.subheader("Rating Distribution")
-        rating_counts = df['Rating'].value_counts().sort_index()
-        fig = px.bar(x=rating_counts.index, y=rating_counts.values,
-                    labels={'x': 'Rating', 'y': 'Count'},
-                    title='Distribution of Attraction Ratings')
-        st.plotly_chart(fig, use_container_width=True)
+        # Create tabs for different insights
+        tab1, tab2, tab3, tab4 = st.tabs(["📊 Ratings", "👥 Visit Modes", "📍 Attractions", "🌍 Geography"])
         
-        # Visit mode distribution
-        if 'VisitModeName' in df.columns:
-            st.subheader("Visit Mode Distribution")
-            mode_counts = df['VisitModeName'].value_counts()
-            fig = px.pie(values=mode_counts.values, names=mode_counts.index,
-                        title='Distribution of Visit Modes')
-            st.plotly_chart(fig, use_container_width=True)
+        with tab1:
+            st.markdown("""
+            <div style="background: rgba(255,255,255,0.9); padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem;">
+                <h3 style="color: #2c3e50; text-align: center;">📊 Rating Distribution Analysis</h3>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if 'Rating' in df.columns:
+                # Get rating data
+                rating_counts = df['Rating'].value_counts().sort_index()
+                
+                # Create two main columns
+                main_col1, main_col2 = st.columns([2, 1])
+                
+                with main_col1:
+                    # Enhanced rating distribution chart
+                    st.markdown("""
+                    <div style="background: white; padding: 1rem; border-radius: 15px; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <h4 style="color: #2c3e50; margin-top: 0;">Distribution Chart</h4>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    fig = px.bar(x=rating_counts.index, y=rating_counts.values,
+                               labels={'x': 'Rating', 'y': 'Number of Visits'},
+                               title='Attraction Rating Distribution',
+                               color=rating_counts.index,
+                               color_continuous_scale='viridis')
+                    fig.update_layout(
+                        height=450,
+                        showlegend=False,
+                        xaxis_title='Rating',
+                        yaxis_title='Number of Visits',
+                        title_x=0.5,
+                        margin=dict(l=50, r=50, t=50, b=50)
+                    )
+                    st.plotly_chart(fig, use_container_width=True, height=450)
+                
+                with main_col2:
+                    # Enhanced statistics panel
+                    st.markdown("""
+                    <div style="background: white; padding: 1rem; border-radius: 15px; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <h4 style="color: #2c3e50; margin-top: 0;">📊 Key Statistics</h4>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Main statistics in cards
+                    col_stat1, col_stat2 = st.columns(2)
+                    
+                    with col_stat1:
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; text-align: center;">
+                            <h2 style="margin: 0; font-size: 2rem;">{df['Rating'].mean():.2f}</h2>
+                            <p style="margin: 0;">Average</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%); color: white; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; text-align: center;">
+                            <h2 style="margin: 0; font-size: 2rem;">{df['Rating'].median():.1f}</h2>
+                            <p style="margin: 0;">Median</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col_stat2:
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, #45b7d1 0%, #96ceb4 100%); color: white; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; text-align: center;">
+                            <h2 style="margin: 0; font-size: 2rem;">{df['Rating'].std():.2f}</h2>
+                            <p style="margin: 0;">Std Dev</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%); color: white; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; text-align: center;">
+                            <h2 style="margin: 0; font-size: 2rem;">{len(df)}</h2>
+                            <p style="margin: 0;">Total Reviews</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # Detailed distribution table
+                    st.markdown("""
+                    <div style="background: rgba(102, 126, 234, 0.1); padding: 1rem; border-radius: 10px; margin-top: 1rem;">
+                        <h4 style="margin-top: 0; color: #2c3e50;">📋 Rating Breakdown</h4>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Create scrollable distribution table - FIXED VERSION
+                    html_parts = ['<div style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 0.5rem;">']
+                                         
+                    for rating, count in sorted(rating_counts.items()):
+                        percentage = (count / len(df)) * 100
+                        html_parts.append(f'<div style="display: flex; justify-content: space-between; padding: 0.5rem; margin: 0.2rem 0; background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"><span><strong>Rating {rating}:</strong></span><span>{count} visits ({percentage:.1f}%)</span></div>')
+                                         
+                    html_parts.append('</div>')
+                    distribution_html = ''.join(html_parts)
+                                         
+                    # Ensure proper HTML rendering
+                    st.markdown(distribution_html, unsafe_allow_html=True)
+                    
+                    # Additional insights
+                    st.markdown("""
+                    <div style="background: rgba(79, 205, 196, 0.1); padding: 1rem; border-radius: 10px; margin-top: 1rem;">
+                        <h4 style="margin-top: 0; color: #2c3e50;">💡 Insights</h4>
+                        <p>• Most common rating: <strong>{most_common_rating}</strong> ({most_common_count} visits)</p>
+                        <p>• Rating range: <strong>{min_rating}</strong> to <strong>{max_rating}</strong></p>
+                        <p>• High ratings (4-5): <strong>{high_rating_pct:.1f}%</strong> of visits</p>
+                    </div>
+                    """.format(
+                        most_common_rating=rating_counts.index[0],
+                        most_common_count=rating_counts.iloc[0],
+                        min_rating=df['Rating'].min(),
+                        max_rating=df['Rating'].max(),
+                        high_rating_pct=((df['Rating'] >= 4).sum() / len(df)) * 100
+                    ), unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div style="background: #ff6b6b; color: white; padding: 2rem; border-radius: 15px; text-align: center;">
+                    <h3>⚠️ Rating Data Not Available</h3>
+                    <p>The Rating column was not found in the dataset.</p>
+                </div>
+                """, unsafe_allow_html=True)
         
-        # Top attractions
-        st.subheader("Most Popular Attractions")
-        top_attractions = df['Attraction'].value_counts().head(10)
-        fig = px.bar(x=top_attractions.values, y=top_attractions.index,
-                    orientation='h',
-                    labels={'x': 'Number of Visits', 'y': 'Attraction'},
-                    title='Top 10 Most Visited Attractions')
-        st.plotly_chart(fig, use_container_width=True)
+        with tab2:
+            st.markdown("""
+            <div style="background: rgba(255,255,255,0.9); padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem;">
+                <h3 style="color: #2c3e50;">Visit Mode Analysis</h3>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if 'VisitModeName' in df.columns:
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # Visit mode distribution
+                    mode_counts = df['VisitModeName'].value_counts()
+                    fig = px.pie(values=mode_counts.values, names=mode_counts.index,
+                               title='Distribution of Visit Modes',
+                               color_discrete_sequence=px.colors.qualitative.Set3,
+                               height=400)
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Visit mode statistics
+                    st.markdown(f"""
+                    <div style="background: white; padding: 1rem; border-radius: 10px; margin-top: 1rem;">
+                        <h4>Visit Mode Statistics</h4>
+                        <p><strong>Most Common:</strong> {mode_counts.index[0]}</p>
+                        <p><strong>Total Modes:</strong> {len(mode_counts)}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col2:
+                    # Visit mode by rating analysis
+                    if 'Rating' in df.columns:
+                        mode_rating = df.groupby('VisitModeName')['Rating'].agg(['mean', 'count']).round(2)
+                        mode_rating = mode_rating.sort_values('mean', ascending=False)
+                        
+                        fig = px.bar(mode_rating, x=mode_rating.index, y='mean',
+                                   labels={'x': 'Visit Mode', 'mean': 'Average Rating'},
+                                   title='Average Rating by Visit Mode',
+                                   color='mean',
+                                   color_continuous_scale='blues',
+                                   height=300)
+                        st.plotly_chart(fig, use_container_width=True)
+                        
+                        # Detailed statistics table
+                        st.markdown("#### Detailed Statistics")
+                        st.dataframe(mode_rating.rename(columns={'mean': 'Avg Rating', 'count': 'Visit Count'}))
+                    else:
+                        st.warning("Rating data not available for analysis")
+            else:
+                st.warning("VisitModeName column not found in data")
         
-        # Rating by visit mode
-        if 'VisitModeName' in df.columns:
-            st.subheader("Average Rating by Visit Mode")
-            avg_rating_by_mode = df.groupby('VisitModeName')['Rating'].mean().sort_values(ascending=True)
-            fig = px.bar(x=avg_rating_by_mode.values, y=avg_rating_by_mode.index,
-                        orientation='h',
-                        labels={'x': 'Average Rating', 'y': 'Visit Mode'},
-                        title='Average Rating by Visit Mode')
-            st.plotly_chart(fig, use_container_width=True)
+        with tab3:
+            st.markdown("""
+            <div style="background: rgba(255,255,255,0.9); padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem;">
+                <h3 style="color: #2c3e50;">Popular Attractions Analysis</h3>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if 'Attraction' in df.columns:
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # Top attractions by visit count
+                    top_attractions = df['Attraction'].value_counts().head(10)
+                    fig = px.bar(x=top_attractions.values, y=top_attractions.index,
+                                orientation='h',
+                                labels={'x': 'Number of Visits', 'y': 'Attraction'},
+                                title='Top 10 Most Visited Attractions',
+                                color=top_attractions.values,
+                                color_continuous_scale='reds',
+                                height=500)
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                with col2:
+                    # Additional attraction insights
+                    st.markdown("#### Attraction Insights")
+                    
+                    total_attractions = df['Attraction'].nunique()
+                    st.metric("Total Unique Attractions", total_attractions)
+                    
+                    if 'Rating' in df.columns:
+                        # Top rated attractions (with minimum visit threshold)
+                        attraction_stats = df.groupby('Attraction')['Rating'].agg(['mean', 'count']).round(2)
+                        top_rated = attraction_stats[attraction_stats['count'] >= 5].sort_values('mean', ascending=False).head(10)
+                        
+                        st.markdown("#### Top Rated Attractions (5+ visits)")
+                        for i, (attraction, stats) in enumerate(top_rated.iterrows(), 1):
+                            st.markdown(f"""
+                            <div style="background: rgba(79, 205, 196, 0.1); padding: 0.5rem; border-radius: 5px; margin: 0.2rem 0;">
+                                <strong>{i}. {attraction}</strong><br>
+                                Rating: {stats['mean']:.2f} ({stats['count']} visits)
+                            </div>
+                            """, unsafe_allow_html=True)
+                    
+                    # Attraction type distribution
+                    if 'AttractionType' in df.columns:
+                        st.markdown("#### Attraction Types")
+                        type_counts = df['AttractionType'].value_counts().head(5)
+                        for attraction_type, count in type_counts.items():
+                            st.progress(count / type_counts.sum())
+                            st.caption(f"{attraction_type}: {count} visits")
+            else:
+                st.warning("Attraction data not found")
         
-        # User distribution by continent
-        if 'Continent' in df.columns:
-            st.subheader("User Distribution by Continent")
-            continent_counts = df['Continent'].value_counts()
-            fig = px.pie(values=continent_counts.values, names=continent_counts.index,
-                        title='User Distribution by Continent')
-            st.plotly_chart(fig, use_container_width=True)
+        with tab4:
+            st.markdown("""
+            <div style="background: rgba(255,255,255,0.9); padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem;">
+                <h3 style="color: #2c3e50;">Geographic Distribution</h3>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Country distribution
+                if 'AttractionCountryId' in df.columns:
+                    # Load country mapping
+                    import pandas as pd
+                    try:
+                        countries_df = pd.read_csv('data/processed/country_cleaned.csv')
+                        country_map = dict(zip(countries_df['CountryId'], countries_df['Country']))
+                        
+                        # Count by country ID
+                        country_counts = df['AttractionCountryId'].value_counts().head(10)
+                        
+                        # Map country IDs to names
+                        country_names = [country_map.get(cid, f'Country {cid}') for cid in country_counts.index]
+                        
+                        fig = px.bar(x=country_counts.values, y=country_names,
+                                    orientation='h',
+                                    labels={'x': 'Number of Visits', 'y': 'Country'},
+                                    title='Top 10 Countries by Visits',
+                                    color=country_counts.values,
+                                    color_continuous_scale='earth',
+                                    height=400)
+                        st.plotly_chart(fig, use_container_width=True)
+                    except FileNotFoundError:
+                        st.warning("Country mapping file not found")
+                else:
+                    st.warning("Country data not available")
+            
+            with col2:
+                # City distribution
+                if 'AttractionCityName' in df.columns:
+                    city_counts = df['AttractionCityName'].value_counts().head(10)
+                    fig = px.bar(x=city_counts.values, y=city_counts.index,
+                                orientation='h',
+                                labels={'x': 'Number of Visits', 'y': 'City'},
+                                title='Top 10 Cities by Visits',
+                                color=city_counts.values,
+                                color_continuous_scale='sunset',
+                                height=400)
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.warning("City data not available")
+                
+                # Geographic summary statistics
+                st.markdown("#### Geographic Summary")
+                if 'AttractionCountryId' in df.columns:
+                    try:
+                        countries_df = pd.read_csv('data/processed/country_cleaned.csv')
+                        country_map = dict(zip(countries_df['CountryId'], countries_df['Country']))
+                        country_ids_in_data = df['AttractionCountryId'].unique()
+                        country_names_in_data = [country_map.get(cid, f'Country {cid}') for cid in country_ids_in_data if cid in country_map]
+                        unique_countries = len(set(country_names_in_data))
+                        st.metric("Countries Represented", unique_countries)
+                    except FileNotFoundError:
+                        st.metric("Countries Represented", df['AttractionCountryId'].nunique())
+                if 'AttractionCityName' in df.columns:
+                    st.metric("Cities Represented", df['AttractionCityName'].nunique())
+                if 'ContinentId' in df.columns:
+                    st.metric("Continents", df['ContinentId'].nunique())
 
 elif page == "Predictions":
     st.header("🔮 Predictions")
@@ -440,75 +697,201 @@ elif page == "Recommendations":
         st.warning("Recommendation system not available")
 
 elif page == "About":
-    st.header("ℹ️ About This Project")
-    
     st.markdown("""
-    ## Tourism Experience Analytics
+    <div class="section-header">
+        <h2 style="color: #2c3e50;">ℹ️ About This Project</h2>
+    </div>
+    """, unsafe_allow_html=True)
     
-    This project analyzes tourism data to provide insights and predictions for:
+    # Project overview tabs
+    about_tab1, about_tab2, about_tab3, about_tab4 = st.tabs(["📋 Project Overview", "🤖 ML Models", "📊 Data Insights", "🚀 Future Plans"])
     
-    ### 🔍 Features:
-    - **Data Analysis**: Comprehensive exploratory data analysis with visualizations
-    - **Rating Prediction**: Predict attraction ratings based on various factors
-    - **Visit Mode Prediction**: Predict the most likely visit mode (Business, Couples, Family, etc.)
-    - **Recommendation System**: Personalized attraction recommendations using hybrid filtering
-    - **Interactive Dashboard**: User-friendly web interface for exploring insights
+    with about_tab1:
+        st.markdown("""
+        <div style="background: white; padding: 2rem; border-radius: 15px; margin-bottom: 2rem;">
+            <h3>🎯 Tourism Experience Analytics</h3>
+            <p>This project analyzes tourism data to provide insights and predictions for:</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;">
+                <div style="background: rgba(102, 126, 234, 0.1); padding: 1rem; border-radius: 10px;">
+                    <h4>🔍 Features:</h4>
+                    <ul>
+                        <li>Data Analysis with Visualizations</li>
+                        <li>Attraction Rating Prediction</li>
+                        <li>Visit Mode Classification</li>
+                        <li>Personalized Recommendations</li>
+                        <li>Interactive Dashboard</li>
+                    </ul>
+                </div>
+                <div style="background: rgba(79, 205, 196, 0.1); padding: 1rem; border-radius: 10px;">
+                    <h4>📊 Data Sources:</h4>
+                    <ul>
+                        <li>Transaction data (visits, ratings)</li>
+                        <li>User demographics and preferences</li>
+                        <li>Attraction information and types</li>
+                        <li>Geographic data (cities, countries)</li>
+                        <li>Visit mode classifications</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Quick stats
+        if rating_pred and rating_pred.df is not None:
+            df = rating_pred.df
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("📊 Records", f"{len(df):,}")
+            with col2:
+                st.metric("👥 Users", f"{df['UserId'].nunique():,}")
+            with col3:
+                st.metric("📍 Attractions", f"{df['AttractionId'].nunique():,}")
+            with col4:
+                st.metric("⭐ Avg Rating", f"{df['Rating'].mean():.2f}")
     
-    ### 📊 Data Sources:
-    The system analyzes multiple tourism datasets including:
-    - Transaction data (visits, ratings)
-    - User demographics and preferences
-    - Attraction information and types
-    - Geographic data (cities, countries, regions, continents)
-    - Visit mode classifications
+    with about_tab2:
+        st.markdown("""
+        <div style="background: white; padding: 2rem; border-radius: 15px;">
+            <h3>🤖 Machine Learning Models</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if rating_pred and visit_pred:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("#### 📈 Rating Prediction Models")
+                for model_name, metrics in rating_pred.results.items():
+                    st.markdown(f"""
+                    <div style="background: rgba(255,255,255,0.9); padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #4facfe;">
+                        <h4>{model_name}</h4>
+                        <p><strong>R² Score:</strong> {metrics['test_r2']:.4f}</p>
+                        <p><strong>RMSE:</strong> {metrics['test_rmse']:.4f}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown("#### 📊 Visit Mode Prediction Models")
+                for model_name, metrics in visit_pred.results.items():
+                    st.markdown(f"""
+                    <div style="background: rgba(255,255,255,0.9); padding: 1rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid #ff6b6b;">
+                        <h4>{model_name}</h4>
+                        <p><strong>Accuracy:</strong> {metrics['test_accuracy']:.4f}</p>
+                        <p><strong>F1 Score:</strong> {metrics['test_f1']:.4f}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="background: rgba(79, 205, 196, 0.1); padding: 1.5rem; border-radius: 10px; margin-top: 2rem;">
+            <h4>🛠️ Technologies Used:</h4>
+            <p><strong>Python Libraries:</strong> Pandas, NumPy, Scikit-learn, XGBoost</p>
+            <p><strong>Visualization:</strong> Plotly, Matplotlib, Seaborn</p>
+            <p><strong>Web Framework:</strong> Streamlit</p>
+            <p><strong>Algorithms:</strong> Random Forest, XGBoost, Collaborative Filtering</p>
+        </div>
+        """, unsafe_allow_html=True)
     
-    ### 🧠 Machine Learning Models:
-    - **Regression**: Linear Regression, Random Forest, XGBoost for rating prediction
-    - **Classification**: Random Forest, XGBoost for visit mode prediction
-    - **Recommendation**: Collaborative filtering, content-based filtering, and hybrid approach
+    with about_tab3:
+        st.markdown("""
+        <div style="background: white; padding: 2rem; border-radius: 15px;">
+            <h3>📊 Key Business Insights</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if rating_pred and rating_pred.df is not None:
+            df = rating_pred.df
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("#### 🎯 Immediate Value")
+                st.markdown("""
+                <div style="background: rgba(255,255,255,0.9); padding: 1rem; border-radius: 10px;">
+                    <ul>
+                        <li><strong>Personalized Recommendations:</strong> Enhance user experience</li>
+                        <li><strong>Visitor Behavior Insights:</strong> Understand travel patterns</li>
+                        <li><strong>Market Segmentation:</strong> Target different visitor types</li>
+                        <li><strong>Performance Analytics:</strong> Evaluate attraction success</li>
+                    </ul>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown("#### 🚀 Strategic Benefits")
+                st.markdown("""
+                <div style="background: rgba(255,255,255,0.9); padding: 1rem; border-radius: 10px;">
+                    <ul>
+                        <li><strong>Marketing Optimization:</strong> Tailored campaigns by visit mode</li>
+                        <li><strong>Resource Planning:</strong> Predict demand patterns</li>
+                        <li><strong>Customer Satisfaction:</strong> Proactive service improvements</li>
+                        <li><strong>Competitive Analysis:</strong> Benchmark performance metrics</li>
+                    </ul>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Performance visualization
+            st.markdown("#### 📈 Model Performance Summary")
+            if rating_pred and visit_pred:
+                performance_data = {
+                    'Metric': ['Rating Prediction R²', 'Visit Mode Accuracy', 'Visit Mode F1'],
+                    'Value': [
+                        max(rating_pred.results.values(), key=lambda x: x['test_r2'])['test_r2'],
+                        max(visit_pred.results.values(), key=lambda x: x['test_accuracy'])['test_accuracy'],
+                        max(visit_pred.results.values(), key=lambda x: x['test_f1'])['test_f1']
+                    ],
+                    'Type': ['Regression', 'Classification', 'Classification']
+                }
+                
+                fig = px.bar(performance_data, x='Metric', y='Value', color='Type',
+                           title='Model Performance Metrics',
+                           labels={'Value': 'Score', 'Metric': 'Performance Metric'}
+                )
+                st.plotly_chart(fig, use_container_width=True)
     
-    ### 🎯 Business Applications:
-    - Personalized travel recommendations
-    - Visitor behavior analysis
-    - Tourism market insights
-    - Attraction performance evaluation
-    - Marketing strategy optimization
-    
-    ### 🛠️ Technologies Used:
-    - Python, Pandas, NumPy
-    - Scikit-learn, XGBoost
-    - Streamlit for web interface
-    - Plotly for interactive visualizations
-    - Matplotlib, Seaborn for static plots
-    
-    ### 📈 Model Performance:
-    - Rating prediction: R² scores around 0.03-0.05 (challenging due to data complexity)
-    - Visit mode prediction: Accuracy ~70-80% with F1 scores around 0.7-0.8
-    - Recommendation system: Hybrid approach combining multiple methods
-    
-    ### 🚀 Future Improvements:
-    - Deep learning models for better predictions
-    - Real-time data integration
-    - Advanced natural language processing for reviews
-    - Enhanced collaborative filtering with temporal dynamics
-    - Mobile application development
-    """)
-    
-    # Show model performance if available
-    if rating_pred and visit_pred:
-        st.subheader("Model Performance Summary")
+    with about_tab4:
+        st.markdown("""
+        <div style="background: white; padding: 2rem; border-radius: 15px;">
+            <h3>🚀 Future Enhancement Opportunities</h3>
+        </div>
+        """, unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
         
         with col1:
-            st.write("**Rating Prediction Models:**")
-            for model_name, metrics in rating_pred.results.items():
-                st.write(f"- {model_name}: R² = {metrics['test_r2']:.3f}, RMSE = {metrics['test_rmse']:.3f}")
+            st.markdown("#### 📈 Short-term Improvements")
+            st.markdown("""
+            <div style="background: rgba(255,255,255,0.9); padding: 1rem; border-radius: 10px;">
+                <ul>
+                    <li>Add cross-validation for robust model evaluation</li>
+                    <li>Implement advanced feature engineering</li>
+                    <li>Enhance data visualization capabilities</li>
+                    <li>Add more sophisticated error handling</li>
+                    <li>Implement A/B testing framework</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col2:
-            st.write("**Visit Mode Prediction Models:**")
-            for model_name, metrics in visit_pred.results.items():
-                st.write(f"- {model_name}: Accuracy = {metrics['test_accuracy']:.3f}, F1 = {metrics['test_f1']:.3f}")
+            st.markdown("#### 🌟 Long-term Vision")
+            st.markdown("""
+            <div style="background: rgba(255,255,255,0.9); padding: 1rem; border-radius: 10px;">
+                <ul>
+                    <li>Real-time data processing and streaming</li>
+                    <li>Deep learning models for improved predictions</li>
+                    <li>Natural language processing for review analysis</li>
+                    <li>Enhanced collaborative filtering with temporal dynamics</li>
+                    <li>Mobile application development</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 15px; text-align: center; margin-top: 2rem;">
+            <h3>🎉 Project Success</h3>
+            <p>This system successfully demonstrates data science techniques applied to tourism data, providing valuable insights and predictive capabilities for the tourism industry.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 # Footer
 st.markdown("---")
