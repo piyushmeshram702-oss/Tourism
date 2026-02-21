@@ -9,6 +9,9 @@ from src.models.recommendation import RecommendationSystem
 import logging
 import time
 from datetime import datetime
+import base64
+from streamlit.components.v1 import html
+from annotated_text import annotated_text, annotation
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -25,100 +28,274 @@ st.set_page_config(
 # Enhanced UI styling
 st.markdown("""
 <style>
-    /* Main background gradient */
+    /* Main background with animated particles */
     .stApp {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+        background-image: radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 20%),
+                          radial-gradient(circle at 90% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 20%);
     }
     
-    /* Header styling with animation */
+    /* Animated background particles */
+    .particles-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: -1;
+    }
+    
+    .particle {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        animation: float 6s infinite ease-in-out;
+    }
+    
+    @keyframes float {
+        0% { transform: translate(0, 0) rotate(0deg); }
+        50% { transform: translate(20px, 20px) rotate(180deg); }
+        100% { transform: translate(0, 0) rotate(360deg); }
+    }
+    
+    /* Header styling with glass effect */
     .main-header {
-        background: linear-gradient(90deg, #4b6cb7 0%, #182848 100%);
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         padding: 2rem;
-        border-radius: 15px;
+        border-radius: 20px;
         margin-bottom: 2rem;
         text-align: center;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        animation: fadeInDown 1s ease-out;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        animation: slideInFromLeft 1s ease-out;
+        position: relative;
+        overflow: hidden;
     }
     
-    /* Metric cards styling */
+    .main-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: rotate 10s linear infinite;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    @keyframes slideInFromLeft {
+        from { opacity: 0; transform: translateX(-50px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    /* Metric cards with 3D effect */
     .metric-card {
         background: rgba(255, 255, 255, 0.95);
         padding: 1.5rem;
         border-radius: 15px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         margin: 1rem 0;
-        border: 1px solid rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.3);
+        transform-style: preserve-3d;
+        perspective: 1000px;
     }
     
     .metric-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+        transform: translateY(-8px) rotateX(5deg) rotateY(5deg);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
     }
     
-    /* Enhanced buttons */
+    /* Enhanced buttons with 3D effect */
     .stButton > button {
-        background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+        background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #44a08d);
         color: white;
         border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 50px;
+        padding: 1rem 2.5rem;
+        border-radius: 60px;
         font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        font-size: 1rem;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+    
+    .stButton > button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: 0.5s;
+        z-index: -1;
+    }
+    
+    .stButton > button:hover::before {
+        left: 100%;
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.4);
     }
     
-    /* Sidebar styling */
+    /* Sidebar with neon effect */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #2c3e50 0%, #3498db 100%);
+        background: linear-gradient(180deg, #1a2a6c 0%, #b21f1f 50%, #1a2a6c 100%);
+        box-shadow: inset 5px 0 15px rgba(0,0,0,0.3);
+        border-right: 2px solid rgba(255,255,255, 0.1);
     }
     
-    /* Animations */
-    @keyframes fadeInDown {
-        from {
-            opacity: 0;
-            transform: translateY(-30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    /* Custom selectbox with neon glow */
+    .stSelectbox > div > div {
+        background: rgba(255, 255, 255, 0.95) !important;
+        border-radius: 12px !important;
+        border: 2px solid transparent !important;
+        transition: all 0.3s ease;
     }
     
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
+    .stSelectbox > div > div:focus-within {
+        border: 2px solid #4ecdc4 !important;
+        box-shadow: 0 0 15px rgba(78, 205, 196, 0.5) !important;
     }
     
-    .pulse {
+    /* Progress bars with animated gradient */
+    .stProgress > div > div {
+        background: linear-gradient(90deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+        background-size: 200% auto;
+        animation: gradientShift 3s linear infinite;
+    }
+    
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    /* Expander with glowing border */
+    .streamlit-expanderHeader {
+        background: rgba(255, 255, 255, 0.1) !important;
+        backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
+        color: white !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+        border: 1px solid rgba(78, 205, 196, 0.4) !important;
+    }
+    
+    /* Section headers with holographic effect */
+    .section-header {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 1.5rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .section-header::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+        background-size: 400%;
+        z-index: -1;
+        border-radius: calc(20px + 2px);
+        animation: gradientBorder 20s linear infinite;
+    }
+    
+    @keyframes gradientBorder {
+        0% { background-position: 0 0; }
+        50% { background-position: 400% 0; }
+        100% { background-position: 0 0; }
+    }
+    
+    /* Floating action button */
+    .floating-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+        color: white;
+        border: none;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        cursor: pointer;
+        z-index: 1000;
         animation: pulse 2s infinite;
     }
     
-    /* Custom selectbox */
-    .stSelectbox > div > div {
-        background: rgba(255, 255, 255, 0.9) !important;
-        border-radius: 10px !important;
+    /* Card hover effects */
+    .hover-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
     }
     
-    /* Progress bars */
-    .stProgress > div > div {
-        background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%) !important;
+    .hover-card:hover {
+        transform: scale(1.03);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
     }
     
-    /* Expander styling */
-    .streamlit-expanderHeader {
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
-        color: white !important;
-        border-radius: 10px !important;
+    /* Glowing text effect */
+    .glow-text {
+        text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #e60073, 0 0 20px #e60073;
+    }
+    
+    /* Neumorphic containers */
+    .neumorphic {
+        background: #e0e5ec;
+        box-shadow: 9px 9px 16px #b8bec7, -9px -9px 16px #ffffff;
+        border-radius: 15px;
+        padding: 1.5rem;
     }
 </style>
+<script>
+    // Create animated background particles
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.createElement('div');
+        container.className = 'particles-container';
+        document.querySelector('.stApp').appendChild(container);
+        
+        for (let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.width = Math.random() * 20 + 5 + 'px';
+            particle.style.height = particle.style.width;
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 6 + 's';
+            container.appendChild(particle);
+        }
+    });
+</script>
 """, unsafe_allow_html=True)
 
 # Initialize models (with caching)
@@ -162,9 +339,42 @@ st.markdown('''
 
 # Enhanced sidebar with custom styling
 st.sidebar.markdown("""
-<div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 15px; margin-bottom: 1rem;">
-    <h2 style="color: white; text-align: center; margin-bottom: 1rem;">🧭 Navigation</h2>
+<div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 15px; margin-bottom: 1rem; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);">
+    <h2 style="color: white; text-align: center; margin-bottom: 1rem; text-shadow: 0 0 10px rgba(255,255,255,0.5);">🧭 Navigation Hub</h2>
 </div>
+""", unsafe_allow_html=True)
+
+# Enhanced navigation with animated icons
+st.sidebar.markdown("""
+<style>
+.nav-item {
+    padding: 12px 15px;
+    margin: 8px 0;
+    border-radius: 10px;
+    background: rgba(255,255,255, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.nav-item:hover {
+    background: rgba(255,255,255, 0.2);
+    border: 1px solid rgba(255,255,255, 0.3);
+    transform: translateX(5px);
+}
+
+.nav-icon {
+    display: inline-block;
+    margin-right: 10px;
+    font-size: 1.2em;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+</style>
 """, unsafe_allow_html=True)
 
 # Enhanced navigation with icons
@@ -177,36 +387,183 @@ navigation_options = {
 }
 
 selected_nav = st.sidebar.radio(
-    "Choose a section:",
+    "",
     list(navigation_options.keys()),
-    index=0
+    index=0,
+    format_func=lambda x: x.split()[1]  # Only show the text part
 )
 
 page = navigation_options[selected_nav]
 
+# Add floating action button for quick access
+st.markdown("""
+<button class="floating-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Back to top">
+    <span>↑</span>
+</button>
+""", unsafe_allow_html=True)
+
 if page == "Overview":
-    st.header("📊 Project Overview")
+    st.markdown("""
+    <div class="section-header">
+        <h2 style="color: #2c3e50; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">📊 Project Overview Dashboard</h2>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Display basic statistics
+    # Enhanced statistics display
     if rating_pred and rating_pred.df is not None:
         df = rating_pred.df
+        
+        # Key metrics with enhanced styling
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("Total Transactions", f"{len(df):,}")
+            st.markdown(f"""
+            <div class="neumorphic hover-card" style="text-align: center; padding: 1.5rem; border-radius: 15px; transition: all 0.3s ease;">
+                <div style="font-size: 2.5rem; color: #ff6b6b; margin-bottom: 0.5rem;">📊</div>
+                <h2 style="margin: 0.5rem 0; font-size: 2rem; color: #2c3e50; font-weight: bold;">{len(df):,}</h2>
+                <p style="margin: 0; color: #7f8c8d; font-weight: 500;">Total Transactions</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
         with col2:
-            st.metric("Unique Users", f"{df['UserId'].nunique():,}")
+            st.markdown(f"""
+            <div class="neumorphic hover-card" style="text-align: center; padding: 1.5rem; border-radius: 15px; transition: all 0.3s ease;">
+                <div style="font-size: 2.5rem; color: #4ecdc4; margin-bottom: 0.5rem;">👥</div>
+                <h2 style="margin: 0.5rem 0; font-size: 2rem; color: #2c3e50; font-weight: bold;">{df["UserId"].nunique():,}</h2>
+                <p style="margin: 0; color: #7f8c8d; font-weight: 500;">Unique Users</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
         with col3:
-            st.metric("Attractions", f"{df['AttractionId'].nunique():,}")
+            st.markdown(f"""
+            <div class="neumorphic hover-card" style="text-align: center; padding: 1.5rem; border-radius: 15px; transition: all 0.3s ease;">
+                <div style="font-size: 2.5rem; color: #45b7d1; margin-bottom: 0.5rem;">📍</div>
+                <h2 style="margin: 0.5rem 0; font-size: 2rem; color: #2c3e50; font-weight: bold;">{df["AttractionId"].nunique()}</h2>
+                <p style="margin: 0; color: #7f8c8d; font-weight: 500;">Attractions</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
         with col4:
-            st.metric("Average Rating", f"{df['Rating'].mean():.2f}")
+            st.markdown(f"""
+            <div class="neumorphic hover-card" style="text-align: center; padding: 1.5rem; border-radius: 15px; transition: all 0.3s ease;">
+                <div style="font-size: 2.5rem; color: #96ceb4; margin-bottom: 0.5rem;">⭐</div>
+                <h2 style="margin: 0.5rem 0; font-size: 2rem; color: #2c3e50; font-weight: bold;">{df["Rating"].mean():.2f}</h2>
+                <p style="margin: 0; color: #7f8c8d; font-weight: 500;">Average Rating</p>
+            </div>
+            """, unsafe_allow_html=True)
         
-        # Display sample data
-        st.subheader("Sample Data")
-        st.dataframe(df.head(10))
+        # Add animated divider
+        st.markdown("""
+        <div style="height: 2px; background: linear-gradient(to right, transparent, #4ecdc4, transparent); margin: 2rem 0; animation: slideInFromLeft 1s ease-out;"></div>
+        """, unsafe_allow_html=True)
+        
+        # Enhanced sample data section
+        st.markdown("""
+        <div class="neumorphic" style="padding: 1.5rem; border-radius: 15px; margin-top: 2rem;">
+            <h3 style="color: #2c3e50; margin-top: 0; display: flex; align-items: center;">
+                <span style="margin-right: 10px;">📋</span>
+                <span>Live Data Explorer</span>
+            </h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Interactive data display with enhanced search
+        search_term = st.text_input("🔍 Search attractions:", "", key="attraction_search", help="Enter attraction name to filter data")
+        
+        # Add search button for better UX
+        search_button = st.button("🔍 Search & Analyze", key="search_btn")
+        
+        # Show search results or full data
+        if (search_term and search_button) or search_term:  # Execute search when term exists and button clicked, or when term exists
+            try:
+                # Validate data availability
+                if df is None or df.empty:
+                    st.warning("⚠️ No data available for search")
+                else:
+                    # Perform search with error handling
+                    filtered_df = df[df['Attraction'].str.contains(search_term, case=False, na=False)]
+                    
+                    if len(filtered_df) > 0:
+                        st.success(f"✅ Found {len(filtered_df)} results for '{search_term}'")
+                        
+                        # Show statistics about filtered data
+                        col_stats1, col_stats2, col_stats3 = st.columns(3)
+                        with col_stats1:
+                            st.metric("Records Found", len(filtered_df))
+                        with col_stats2:
+                            st.metric("Avg Rating", f"{filtered_df['Rating'].mean():.2f}")
+                        with col_stats3:
+                            st.metric("Unique Attractions", filtered_df['Attraction'].nunique())
+                        
+                        st.dataframe(filtered_df.head(15), use_container_width=True, height=500)
+                        
+                        # Show additional search info
+                        st.markdown(f"""
+                        <div class="neumorphic" style="padding: 1rem; border-radius: 10px; margin-top: 1rem;">
+                            <h4 style="margin-top: 0; color: #2c3e50;">📊 Search Results Summary</h4>
+                            <p><strong>Total matches:</strong> {len(filtered_df):,}</p>
+                            <p><strong>Unique attractions found:</strong> {filtered_df['Attraction'].nunique()}</p>
+                            <p><strong>Average rating:</strong> {filtered_df['Rating'].mean():.2f}</p>
+                            <p><strong>Rating range:</strong> {filtered_df['Rating'].min()}-{filtered_df['Rating'].max()}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.info(f"🔍 No results found for '{search_term}'. Try different keywords.")
+                        
+                        # Show suggestions
+                        st.markdown("💡 **Try these popular search terms:**")
+                        sample_attractions = df['Attraction'].value_counts().head(5).index.tolist()
+                        cols = st.columns(len(sample_attractions))
+                        for i, attraction in enumerate(sample_attractions):
+                            with cols[i]:
+                                if st.button(f"{attraction[:20]}...", key=f"suggestion_{i}"):
+                                    st.session_state[f"attraction_search"] = attraction
+                                    
+            except Exception as e:
+                st.error(f"❌ Search error: {str(e)}")
+                st.info("Please try a different search term or check the data loading.")
+        else:
+            # Show full dataset when no search
+            st.dataframe(df.head(10), use_container_width=True)
+            st.caption("Showing first 10 records. Use search above to filter results.")
+            
+            # Show dataset info
+            st.markdown(f"""
+            <div class="neumorphic" style="padding: 1rem; border-radius: 10px; margin-top: 1rem;">
+                <h4 style="margin-top: 0; color: #2c3e50;">📊 Dataset Overview</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div style="padding: 0.5rem; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #4ecdc4;">{len(df):,}</div>
+                        <div style="font-size: 0.9rem; color: #7f8c8d;">Total Records</div>
+                    </div>
+                    <div style="padding: 0.5rem; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #ff6b6b;">{df['Attraction'].nunique()}</div>
+                        <div style="font-size: 0.9rem; color: #7f8c8d;">Unique Attractions</div>
+                    </div>
+                    <div style="padding: 0.5rem; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #45b7d1;">{df['UserId'].nunique():,}</div>
+                        <div style="font-size: 0.9rem; color: #7f8c8d;">Unique Users</div>
+                    </div>
+                    <div style="padding: 0.5rem; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #96ceb4;">{df['VisitYear'].min()}-{df['VisitYear'].max()}</div>
+                        <div style="font-size: 0.9rem; color: #7f8c8d;">Date Range</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
         
     else:
-        st.warning("Data not available. Please ensure data files are in the correct location.")
+        st.markdown("""
+        <div class="neumorphic" style="padding: 2rem; border-radius: 15px; text-align: center;">
+            <h3 style="color: #ff6b6b; margin-top: 0;">⚠️ Data Loading Error</h3>
+            <p>Please ensure data files are in the correct location.</p>
+            <div style="margin-top: 1rem;">
+                <div style="display: inline-block; padding: 0.5rem 1rem; background: #ff6b6b; color: white; border-radius: 20px;">
+                    📁 Check: data/processed/merged_tourism_data.csv
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 elif page == "Data Insights":
     st.markdown("""
@@ -632,69 +989,187 @@ elif page == "Predictions":
             st.warning("Visit mode prediction model not available")
 
 elif page == "Recommendations":
-    st.header("🎯 Personalized Recommendations")
+    st.markdown("""
+    <div class="section-header">
+        <h2 style="color: #2c3e50;">🎯 Personalized Recommendations Engine</h2>
+    </div>
+    """, unsafe_allow_html=True)
     
     if rec_system is not None:
         # User input for recommendations
-        st.subheader("Get Recommendations")
+        st.markdown("""
+        <div class="neumorphic" style="padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem;">
+            <h3 style="color: #2c3e50; margin-top: 0; display: flex; align-items: center;">
+                <span style="margin-right: 10px;">⚙️</span>
+                <span>Configure Your Recommendations</span>
+            </h3>
+        </div>
+        """, unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
         
         with col1:
-            user_id = st.number_input("User ID", min_value=1, value=14)
-            rec_method = st.selectbox("Recommendation Method", 
+            user_id = st.number_input("👤 Enter User ID", min_value=1, value=14, help="Enter your user ID to get personalized recommendations")
+            rec_method = st.selectbox("🧠 Recommendation Algorithm", 
                                     ["hybrid", "collaborative", "content", "popular"],
                                     format_func=lambda x: {
-                                        "hybrid": "Hybrid (Best Overall)",
-                                        "collaborative": "Collaborative Filtering",
-                                        "content": "Content-Based",
-                                        "popular": "Popular Attractions"
-                                    }[x])
+                                        "hybrid": "🔄 Hybrid (Best Overall)",
+                                        "collaborative": "👥 Collaborative Filtering",
+                                        "content": "📚 Content-Based",
+                                        "popular": "⭐ Popular Attractions"
+                                    }[x],
+                                    help="Choose the algorithm that best suits your preferences")
         
         with col2:
-            num_recommendations = st.slider("Number of Recommendations", 1, 10, 5)
+            num_recommendations = st.slider("📊 Number of Recommendations", 1, 10, 5, help="Select how many recommendations you'd like to see")
         
-        if st.button("Get Recommendations"):
-            try:
-                # Get recommendations
-                recommendations = rec_system.get_recommendations_for_user(
-                    user_id, num_recommendations, rec_method
-                )
-                
-                if not recommendations.empty:
-                    st.subheader(f"Top {num_recommendations} Recommendations for User {user_id}")
+        # Add recommendation method description
+        method_descriptions = {
+            "hybrid": "Combines multiple algorithms for the most accurate recommendations",
+            "collaborative": "Finds users with similar preferences and recommends attractions they liked",
+            "content": "Recommends attractions similar to ones you've enjoyed before",
+            "popular": "Shows the most popular attractions among all users"
+        }
+        st.info(f"💡 Selected method: {method_descriptions[rec_method]}")
+        
+        if st.button("🚀 Generate Recommendations", type="primary", use_container_width=True):
+            with st.spinner("🧠 Processing your preferences and generating recommendations..."):
+                try:
+                    # Get recommendations
+                    recommendations = rec_system.get_recommendations_for_user(
+                        user_id, num_recommendations, rec_method
+                    )
                     
-                    # Display recommendations in a nice format
-                    for i, (_, rec) in enumerate(recommendations.iterrows(), 1):
-                        with st.expander(f"{i}. {rec['Attraction']}"):
-                            col1, col2 = st.columns(2)
+                    if not recommendations.empty:
+                        st.markdown(f"""
+                        <div class="neumorphic" style="padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; text-align: center;">
+                            <h3 style="color: #2c3e50; margin-top: 0;">🏆 Top {num_recommendations} Recommendations for User {user_id}</h3>
+                            <p>Generated using <strong>{rec_method.title()}</strong> algorithm</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Display recommendations in an enhanced format
+                        for i, (_, rec) in enumerate(recommendations.iterrows(), 1):
+                            # Create a visually appealing card for each recommendation
+                            card_colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD", "#98D8C8", "#F7DC6F", "#BB8FCE", "#85C1E9"]
+                            card_color = card_colors[(i-1) % len(card_colors)]
                             
-                            with col1:
-                                st.write(f"**Type:** {rec['AttractionType']}")
-                                st.write(f"**Location:** {rec['City']}, {rec['Country']}")
+                            st.markdown(f"""
+                            <div class="neumorphic hover-card" style="padding: 1.5rem; border-radius: 15px; margin-bottom: 1rem; border-left: 5px solid {card_color};">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h4 style="color: #2c3e50; margin: 0; display: flex; align-items: center;">
+                                        <span style="margin-right: 10px; font-size: 1.5em;">{['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'][i-1]}</span>
+                                        {rec['Attraction']}
+                                    </h4>
+                                    <span style="background: {card_color}; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9em;">#{i}</span>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
                             
-                            with col2:
+                            col_rec1, col_rec2, col_rec3 = st.columns([2, 1, 1])
+                            
+                            with col_rec1:
+                                st.markdown(f"""
+                                <div style="background: rgba(255,255,255,0.7); padding: 1rem; border-radius: 10px;">
+                                    <h5>📍 Location Details</h5>
+                                    <p><strong>City:</strong> {rec['City']}</p>
+                                    <p><strong>Country:</strong> {rec['Country']}</p>
+                                    <p><strong>Type:</strong> {rec['AttractionType']}</p>
+                                </div>
+                                """, unsafe_allow_html=True)
+                            
+                            with col_rec2:
+                                # Display scoring information
                                 if 'HybridScore' in rec:
-                                    st.write(f"**Score:** {rec['HybridScore']:.3f}")
+                                    score = rec['HybridScore']
+                                    st.markdown(f"""
+                                    <div style="background: {card_color}; color: white; padding: 1rem; border-radius: 10px; text-align: center;">
+                                        <h5>📊 Recommendation Score</h5>
+                                        <p style="font-size: 1.8rem; font-weight: bold; margin: 0;">{score:.3f}</p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
                                 elif 'AvgRating' in rec:
-                                    st.write(f"**Average Rating:** {rec['AvgRating']:.2f}")
-                                    st.write(f"**Visit Count:** {rec['VisitCount']}")
+                                    rating = rec['AvgRating']
+                                    visits = rec['VisitCount']
+                                    st.markdown(f"""
+                                    <div style="background: {card_color}; color: white; padding: 1rem; border-radius: 10px; text-align: center;">
+                                        <h5>⭐ Average Rating</h5>
+                                        <p style="font-size: 1.8rem; font-weight: bold; margin: 0;">{rating:.2f}</p>
+                                        <p style="margin: 0; font-size: 0.9em;">{visits} visits</p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
                                 elif 'SimilarityScore' in rec:
-                                    st.write(f"**Similarity:** {rec['SimilarityScore']:.3f}")
+                                    similarity = rec['SimilarityScore']
+                                    st.markdown(f"""
+                                    <div style="background: {card_color}; color: white; padding: 1rem; border-radius: 10px; text-align: center;">
+                                        <h5>🔄 Similarity Score</h5>
+                                        <p style="font-size: 1.8rem; font-weight: bold; margin: 0;">{similarity:.3f}</p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                else:
+                                    st.markdown(f"""
+                                    <div style="background: {card_color}; color: white; padding: 1rem; border-radius: 10px; text-align: center;">
+                                        <h5>🎯 Recommended</h5>
+                                        <p style="font-size: 1.8rem; font-weight: bold; margin: 0;">For You</p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
                             
-                            # Show additional details if available
-                            if 'PredictedRating' in rec:
-                                st.progress(rec['PredictedRating'] / 5.0)
-                                st.caption(f"Predicted Rating: {rec['PredictedRating']:.2f}/5.0")
-                
-                else:
-                    st.warning("No recommendations available for this user.")
+                            with col_rec3:
+                                # Show additional details
+                                if 'PredictedRating' in rec:
+                                    pred_rating = rec['PredictedRating']
+                                    st.markdown(f"""
+                                    <div style="background: rgba(255,255,255,0.7); padding: 1rem; border-radius: 10px;">
+                                        <h5>🔮 Predicted Rating</h5>
+                                        <div style="display: flex; align-items: center;">
+                                            <div style="flex-grow: 1; height: 20px; background: #eee; border-radius: 10px; overflow: hidden;">
+                                                <div style="width: {(pred_rating/5)*100}%; height: 100%; background: linear-gradient(90deg, #4ecdc4, #44a08d);"></div>
+                                            </div>
+                                            <span style="margin-left: 10px; font-weight: bold;">{pred_rating:.2f}/5</span>
+                                        </div>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                
+                            # Action buttons
+                            col_actions = st.columns(3)
+                            with col_actions[0]:
+                                if st.button(f"🗺️ View on Map {i}", key=f"map_{i}"):
+                                    st.toast(f"Opening map for {rec['Attraction']}!")
+                            with col_actions[1]:
+                                if st.button(f"❤️ Save to Favorites {i}", key=f"fav_{i}"):
+                                    st.toast(f"Added {rec['Attraction']} to favorites!")
+                            with col_actions[2]:
+                                if st.button(f"💬 Share {i}", key=f"share_{i}"):
+                                    st.toast(f"Sharing {rec['Attraction']}!")
                     
-            except Exception as e:
-                st.error(f"Error generating recommendations: {e}")
-                st.info("Try using a different User ID or recommendation method.")
+                    else:
+                        st.markdown("""
+                        <div class="neumorphic" style="padding: 2rem; border-radius: 15px; text-align: center;">
+                            <h4 style="color: #ff6b6b; margin-top: 0;">🤔 No Recommendations Available</h4>
+                            <p>Try using a different User ID or recommendation method.</p>
+                            <div style="margin-top: 1rem;">
+                                <div style="display: inline-block; padding: 0.5rem 1rem; background: #4ecdc4; color: white; border-radius: 20px;">
+                                    💡 Tip: Try User ID between 1-1000
+                                </div>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                except Exception as e:
+                    st.markdown(f"""
+                    <div class="neumorphic" style="padding: 2rem; border-radius: 15px; text-align: center;">
+                        <h4 style="color: #ff6b6b; margin-top: 0;">❌ Error Generating Recommendations</h4>
+                        <p>{str(e)}</p>
+                        <p>Try using a different User ID or recommendation method.</p>
+                    </div>
+                    """, unsafe_allow_html=True)
     else:
-        st.warning("Recommendation system not available")
+        st.markdown("""
+        <div class="neumorphic" style="padding: 2rem; border-radius: 15px; text-align: center;">
+            <h4 style="color: #ff6b6b; margin-top: 0;">⚠️ Recommendation System Not Available</h4>
+            <p>Please ensure the recommendation system is properly initialized.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 elif page == "About":
     st.markdown("""
@@ -893,6 +1368,43 @@ elif page == "About":
         </div>
         """, unsafe_allow_html=True)
 
-# Footer
-st.markdown("---")
-st.markdown("Developed for Tourism Analytics")
+# Enhanced Footer
+st.markdown("""
+<style>
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    text-align: center;
+    padding: 1rem 0;
+    z-index: 1000;
+}
+
+.footer a {
+    color: #4ecdc4;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
+</style>
+<div class="footer">
+    <p>🌍 Tourism Analytics Dashboard | Powered by AI & Data Science</p>
+    <p>Made with ❤️ using Streamlit | <a href="https://github.com/piyushmeshram702-oss/Tourism" target="_blank">View on GitHub</a></p>
+</div>
+""", unsafe_allow_html=True)
+
+# Inject custom CSS for smooth scrolling
+st.markdown("""
+<style>
+html {
+    scroll-behavior: smooth;
+}
+</style>
+""", unsafe_allow_html=True)
